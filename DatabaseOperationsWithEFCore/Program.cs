@@ -1,3 +1,6 @@
+using DatabaseOperationsWithEFCore.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +11,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+/* Registering Db Context For Db Operations using SQL Server and reading connection string from AppSettings.JSON */
+builder.Services.AddDbContext<ApplicationDbContext>(option =>
+{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
