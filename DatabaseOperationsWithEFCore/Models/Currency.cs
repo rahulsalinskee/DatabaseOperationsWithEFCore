@@ -1,18 +1,12 @@
 ﻿namespace DatabaseOperationsWithEFCore.Models
 {
-    public class Book
+    public class Currency
     {
         public int Id { get; set; }
 
         public string Title { get; set; }
 
         public string Description { get; set; }
-
-        public int NumberOfPages { get; set; }
-
-        public bool IsActive { get; set; }
-
-        public DateTime CreatedOn { get; set; }
 
         /* Since a book can be published in multiple languages. Hence, we need to use One to many relationship.
         *  We need to add foreign key (Primary key of Language)
@@ -23,9 +17,8 @@
         *       
         *  Step 2:
         *       A. Add a property of type ICollection<Book> in Language class (line: 20 in Language.cs)
+        *   Current Step: This is Step 2
         */
-        public int LanguageId { get; set; }
-
-        public Language Language { get; set; }
+        public ICollection<BookPrice> BookPrices { get; set; }
     }
 }
