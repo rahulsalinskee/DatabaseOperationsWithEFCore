@@ -1,4 +1,7 @@
 using DatabaseOperationsWithEFCore.Data;
+using DatabaseOperationsWithEFCore.DTOs.CurrencyDTOs.CurrencyDTO;
+using DatabaseOperationsWithEFCore.Repository.Implementations;
+using DatabaseOperationsWithEFCore.Repository.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +19,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddScoped<ICurrencyService, CurrencyImplementation>();
+builder.Services.AddScoped<IFilterService<CurrencyDto>, FilterImplementation<CurrencyDto>>();
+
 
 var app = builder.Build();
 
