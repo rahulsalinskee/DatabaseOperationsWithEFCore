@@ -25,41 +25,43 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
         {
             if (addNewCurrencyDto is null)
             {
-                return await Task.FromResult<ResponseDto?>(GetResponse(responseData: null, isSuccess: false, message: "Currency data cannot be null."));
+                return GetResponse(responseData: null, isSuccess: false, message: "Currency data cannot be null.");
+            }
+
+            /* Validate the DTO properties */
+            if (string.IsNullOrWhiteSpace(addNewCurrencyDto.Title))
+            {
+                return GetResponse(responseData: null, isSuccess: false, message: "Currency title cannot be null or empty.");
+            }
+
+            /* Check if a currency with the same title already exists */
+            var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: addNewCurrencyDto, currencyDtoType: CurrencyDtoType.AddCurrencyDto, existingCurrencies: this._applicationDbContext.Currencies);
+
+            if (isCurrencyDuplicated)
+            {
+                return GetResponse(responseData: null, isSuccess: false, message: "Currency with the same title already exists.");
             }
             else
             {
-                CurrencyDto currencyDto = new();
-
-                /* Check if a currency with the same title already exists */
-                //var existingCurrency = await this._applicationDbContext.Currencies.AsNoTracking().FirstOrDefaultAsync(currency => currency.Title.Equals(addNewCurrencyDto.Title, StringComparison.OrdinalIgnoreCase));
-                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: addNewCurrencyDto, currencyDtoType: CurrencyDtoType.AddCurrencyDto, existingCurrencies: this._applicationDbContext.Currencies);
-
-                if (!isCurrencyDuplicated)
+                /* Create new Currency entity */
+                Currency newCurrency = new()
                 {
-                    /* Convert Currency DTO to Currency Model */
-                    var convertedCurrencyDtoToCurrency = currencyDto.FromCurrencyDtoToCurrencyModelExtension();
+                    Title = addNewCurrencyDto.Title.Trim(),
+                    Description = addNewCurrencyDto.Description?.Trim()
+                    // Add other properties as needed
+                };
 
-                    /* Add Currency */
-                    await _applicationDbContext.Currencies.AddAsync(convertedCurrencyDtoToCurrency);
+                /* Add Currency */
+                await _applicationDbContext.Currencies.AddAsync(newCurrency);
 
-                    /* Check if - currency is not duplicated */
+                /* Save Changes */
+                await _applicationDbContext.SaveChangesAsync();
 
-                    /* Save Changes */
-                    await _applicationDbContext.SaveChangesAsync();
+                /* Convert the saved Currency Model back to Currency DTO */
+                var convertedCurrencyModelToCurrencyDto = newCurrency.FromCurrencyModelToCurrencyDtoExtension();
 
-                    /* Convert Currency Model to Currency DTO */
-                    Currency currency = new();
-
-                    var convertedCurrencyModelToCurrencyDto = currency.FromCurrencyModelToCurrencyDtoExtension();
-
-                    /* Return Response */
-                    return GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully.");
-                }
-                else
-                {
-                    return GetResponse(responseData: null, isSuccess: false, message: "Currency with the same title already exists.");
-                }
+                /* Return Response */
+                return GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully."); 
             }
         }
 
@@ -198,7 +200,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 }
 
                 var existingCurrencies = this._applicationDbContext.Currencies.Where(currency => currency.Title != title);
-                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto, currencyDtoType: CurrencyDtoType.UpdateCurrencyDto, existingCurrencies: existingCurrencies);
+                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto, 
+                    currencyDtoType: CurrencyDtoType.UpdateCurrencyDto, existingCurrencies: existingCurrencies);
 
                 if (!isCurrencyDuplicated)
                 {
@@ -253,7 +256,9 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
              
             */
 
-            return existingCurrencies.Any(existingCurrency => existingCurrency.Title.Equals(titleToCheck, StringComparison.OrdinalIgnoreCase));
+            var isCurrencyDuplicated =  existingCurrencies.Any(existingCurrency => existingCurrency.Title.Equals(titleToCheck, StringComparison.OrdinalIgnoreCase));
+
+            return isCurrencyDuplicated;
         }
 
         private enum CurrencyDtoType
