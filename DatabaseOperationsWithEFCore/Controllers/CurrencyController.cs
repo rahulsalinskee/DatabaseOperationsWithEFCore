@@ -1,4 +1,5 @@
 ﻿using DatabaseOperationsWithEFCore.DTOs.CurrencyDTOs.AddCurrencyDTOs;
+using DatabaseOperationsWithEFCore.DTOs.CurrencyDTOs.CurrencyDTO;
 using DatabaseOperationsWithEFCore.DTOs.CurrencyDTOs.UpdateCurrencyDTOs;
 using DatabaseOperationsWithEFCore.Repository.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -57,12 +58,24 @@ namespace DatabaseOperationsWithEFCore.Controllers
             {
                 return BadRequest(new { Message = "Invalid currency data." });
             }
+
             var response = await this._currencyService.AddCurrencyAsync(addCurrencyDto: addCurrencyDto);
+
             if (response?.IsSuccess is false)
             {
                 return BadRequest(response);
             }
-            return CreatedAtAction(nameof(GetCurrencyById), new { id = response?.Response }, response);
+
+            /* FIXED: Extract the Title from the response object */
+            if (response?.Response is CurrencyDto currencyDto)
+            {
+                return CreatedAtAction(nameof(GetCurrencyByTitle), new { title = currencyDto.Title }, response);
+            }
+            else
+            {
+                /* Fallback: return 201 Created without location header if we can't extract ID */
+                return StatusCode(201, response);
+            }
         }
 
         [HttpPut("{id:int}")]
