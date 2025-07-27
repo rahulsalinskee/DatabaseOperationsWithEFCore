@@ -192,7 +192,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
             else
             {
-                var currencyByTitle = await this._applicationDbContext.Currencies.FindAsync(title);
+                var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
 
                 if (currencyByTitle is null)
                 {
