@@ -67,7 +67,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto?> DeleteCurrencyByIdAsync(int id)
         {
-            var currencyById = await this._applicationDbContext.FindAsync<Currency>(id);
+            var currencyById = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Id == id);
 
             if (currencyById is null)
             {
@@ -83,7 +83,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto?> DeleteCurrencyByTitleAsync(string title)
         {
-            var currencyByTitle = await this._applicationDbContext.FindAsync<Currency>(title);
+            var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
 
             if (currencyByTitle is null)
             {
@@ -135,7 +135,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto?> GetCurrencyByTitleAsync(string title)
         {
-            var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
+            //var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
+            var currencyByTitle = await this._applicationDbContext.Currencies.Where(currency => currency.Title == title).FirstOrDefaultAsync();
 
             if (currencyByTitle is null)
             {
