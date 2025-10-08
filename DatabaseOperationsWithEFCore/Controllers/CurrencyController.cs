@@ -129,5 +129,21 @@ namespace DatabaseOperationsWithEFCore.Controllers
             }
             return Ok(response);
         }
+
+        [HttpDelete("{id}/{title}")]
+        public async Task<IActionResult> DeleteCurrencyByIdAndTitle([FromRoute] int id, [FromRoute] string title)
+        {
+            if (id != 0 && title is not null)
+            {
+                return BadRequest(new { Message = "Invalid currency data." });
+            }
+            var response = await this._currencyService.DeleteCurrencyByIdAndTitleAsync(id: id, title: title);
+
+            if (response?.IsSuccess is false)
+            {
+                return NotFound(new { Message = $"Currency with ID {id} and {title} is not found." });
+            }
+            return Ok(response);
+        }
     }
 }

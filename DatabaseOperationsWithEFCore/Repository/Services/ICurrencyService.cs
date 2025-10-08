@@ -10,6 +10,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 
         public Task<ResponseDto?> GetCurrencyByIdAsync(int id);
 
+        public Task<ResponseDto?> GetCurrenciesByIdsAsync(IEnumerable<int> ids);
+
         public Task<ResponseDto?> GetCurrencyByTitleAsync(string title);
 
         public Task<ResponseDto?> AddCurrencyAsync(AddNewCurrencyDto addCurrencyDto);
@@ -21,5 +23,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
         public Task<ResponseDto?> DeleteCurrencyByIdAsync(int id);
 
         public Task<ResponseDto?> DeleteCurrencyByTitleAsync(string title);
+
+        public Task<ResponseDto?> DeleteCurrencyByIdAndTitleAsync(int id, string title);
     }
 }

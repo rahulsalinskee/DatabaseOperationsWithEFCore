@@ -97,6 +97,21 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
         }
 
+        public async Task<ResponseDto?> DeleteCurrencyByIdAndTitleAsync(int id, string title)
+        {
+            var currencyByIdAndTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Id == id && currency.Title == title);
+            if (currencyByIdAndTitle is null)
+            {
+                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id} and Title - {title}");
+            }
+            else
+            {
+                this._applicationDbContext.Currencies.Remove(currencyByIdAndTitle);
+                await this._applicationDbContext.SaveChangesAsync();
+                return GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
+            }
+        }
+
         public async Task<ResponseDto?> GetAllCurrenciesAsync(string? columnName = null, string? filterKeyWord = null)
         {
             var currencies = this._applicationDbContext.Currencies.Include(currency => currency.BookPrices).AsQueryable();
@@ -133,10 +148,38 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
         }
 
+        public async Task<ResponseDto?> GetCurrenciesByIdsAsync(IEnumerable<int> ids)
+        {
+            if (ids is null || !ids.Any())
+            {
+                return GetResponse(responseData: null, isSuccess: false, message: "No IDs provided for currency retrieval.");
+            }
+            else
+            {
+                var currenciesWithMultipleIds = await this._applicationDbContext.Currencies.Where(currency => ids.Contains(currency.Id)).ToListAsync();
+
+                if (currenciesWithMultipleIds.Any())
+                {
+                    /* Convert the list of Currency models to a list of Currency DTOs */
+                    var currenciesDto = currenciesWithMultipleIds.Select(currency => currency.FromCurrencyModelToCurrencyDtoExtension()).ToList();
+                    
+                    /* Convert the list of Currency models to a list of Currency DTOs */
+                    return GetResponse(responseData: currenciesDto, isSuccess: true, message: "Currencies retrieved successfully.");
+                }
+                else
+                {
+                    return GetResponse(responseData: null, isSuccess: false, message: "No Currencies found with the provided IDs.");
+                }
+            }
+        }
+
         public async Task<ResponseDto?> GetCurrencyByTitleAsync(string title)
         {
-            //var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
-            var currencyByTitle = await this._applicationDbContext.Currencies.Where(currency => currency.Title == title).FirstOrDefaultAsync();
+            /* Should not use Where clause with FirstOrDefault. It hits the performance */
+            //var currencyByTitle = await this._applicationDbContext.Currencies.Where(currency => currency.Title == title).FirstOrDefaultAsync();
+
+            /* This is how we should use Where clause condition in FirstOrDefault without Where clause */
+            var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
 
             if (currencyByTitle is null)
             {
