@@ -61,7 +61,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 var convertedCurrencyModelToCurrencyDto = newCurrency.FromCurrencyModelToCurrencyDtoExtension();
 
                 /* Return Response */
-                return GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully."); 
+                return GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully.");
             }
         }
 
@@ -114,7 +114,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto?> GetAllCurrenciesAsync(string? columnName = null, string? filterKeyWord = null)
         {
-            var currencies = this._applicationDbContext.Currencies.Include(currency => currency.BookPrices).AsQueryable();
+            /* Eager Loading of related data using Include method. LINQ's Select() is used to select the selected column to fetch instead of fetching all columns from database */
+            var currencies = this._applicationDbContext.Currencies.Include(currency => currency.BookPrices).Select(currency => new Currency() { Id = currency.Id, Title = currency.Title }).AsQueryable();
 
             if (currencies.Any())
             {
@@ -162,7 +163,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 {
                     /* Convert the list of Currency models to a list of Currency DTOs */
                     var currenciesDto = currenciesWithMultipleIds.Select(currency => currency.FromCurrencyModelToCurrencyDtoExtension()).ToList();
-                    
+
                     /* Convert the list of Currency models to a list of Currency DTOs */
                     return GetResponse(responseData: currenciesDto, isSuccess: true, message: "Currencies retrieved successfully.");
                 }
@@ -244,7 +245,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 }
 
                 var existingCurrencies = this._applicationDbContext.Currencies.Where(currency => currency.Title != title);
-                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto, 
+                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto,
                     currencyDtoType: CurrencyDtoType.UpdateCurrencyDto, existingCurrencies: existingCurrencies);
 
                 if (!isCurrencyDuplicated)
@@ -300,7 +301,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
              
             */
 
-            var isCurrencyDuplicated =  existingCurrencies.Any(existingCurrency => existingCurrency.Title.Equals(titleToCheck, StringComparison.OrdinalIgnoreCase));
+            var isCurrencyDuplicated = existingCurrencies.Any(existingCurrency => existingCurrency.Title.Equals(titleToCheck, StringComparison.OrdinalIgnoreCase));
 
             return isCurrencyDuplicated;
         }

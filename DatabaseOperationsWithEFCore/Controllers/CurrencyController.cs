@@ -29,6 +29,24 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return Ok(response);
         }
 
+        [HttpPost("ids")]
+        public async Task<IActionResult> GetCurrenciesByIds([FromBody] List<int> ids)
+        {
+            if (ids is not null)
+            {
+                var response = await this._currencyService.GetCurrenciesByIdsAsync(ids: ids);
+
+                if (response is not null && response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+
+                return NotFound(new { Message = $"{ids}" });
+            }
+
+            return BadRequest(new { Message = "Invalid currency data." });
+        }
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetCurrencyById([FromRoute] int id)
         {
