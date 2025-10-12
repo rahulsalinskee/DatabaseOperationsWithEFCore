@@ -13,6 +13,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 
         public Task<ResponseDto> AddBookAsync(AddBookDto addBookDto);
 
+        public Task<ResponseDto> AddBooksAsync(AddBooksDto addNewBooksDto);
+
         public Task<ResponseDto> UpdateBookByTitleAsync(string title, UpdateBookDto updateBookDto);
 
         public Task<ResponseDto> DeleteBookByTitleAsync(string title);

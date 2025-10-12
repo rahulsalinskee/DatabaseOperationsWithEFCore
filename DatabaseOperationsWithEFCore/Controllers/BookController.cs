@@ -46,6 +46,17 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("AddBooks")]
+        public async Task<IActionResult> AddBooksAsync([FromBody] AddBooksDto addBooksDto)
+        {
+            var response = await bookService.AddBooksAsync(addNewBooksDto: addBooksDto);
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
         [HttpPut("UpdateBook/{title}")]
         public async Task<IActionResult> UpdateBookByTitleAsync([FromRoute] string title, [FromBody] UpdateBookDto updateBookDto)
         {

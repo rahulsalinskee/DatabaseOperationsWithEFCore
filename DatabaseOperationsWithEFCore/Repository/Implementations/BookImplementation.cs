@@ -35,8 +35,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
 
             /* Checking for duplicate book */
-            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title,
-                existingEntities: _applicationDbContext.Books, propertySelector: book => book.Title);
+            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title, existingEntities: _applicationDbContext.Books, propertySelector: book => book.Title);
 
             /* If duplicate book found, return duplication error */
             if (isDuplicatedBook)
@@ -70,6 +69,141 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Return success response with added book DTO */
                 return Utility.GetResponse(responseData: addedNewBookDto, isSuccess: true, message: "Book added successfully");
             }
+        }
+
+        public async Task<ResponseDto> AddBooksAsync(AddBooksDto addNewBooksDto)
+        {
+            /* Validate the input */
+            if (addNewBooksDto is null || addNewBooksDto.Books is null || !addNewBooksDto.Books.Any())
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Invalid book data! No books provided.");
+            }
+
+            /* List to store validation errors */
+            var validationErrors = new List<string>();
+
+            /* List to store books to be added */
+            var booksToAdd = new List<Book>();
+
+            /* Get existing book titles for duplication check */
+            var existingBookTitles = await _applicationDbContext.Books.Select(book => book.Title.ToLower()).ToListAsync();
+
+            /* Track titles in current batch to prevent duplicates within the batch */
+            var currentBatchTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var addBookDto in addNewBooksDto.Books)
+            {
+                /* Validate each book */
+                if (string.IsNullOrWhiteSpace(addBookDto.Title))
+                {
+                    var error = "One or more books have empty titles.";
+                    validationErrors.Add(error);
+
+                    /* Stop on first error if configured */
+                    if (addNewBooksDto.StopOnFirstError)
+                    {
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                    }
+                    continue;
+                }
+
+                var title = addBookDto.Title;
+
+                /* Check for duplicate in database */
+                if (existingBookTitles.Contains(title.ToLower()))
+                {
+                    var error = $"Book with title '{title}' already exists in database.";
+                    validationErrors.Add(error);
+
+                    /* Stop on first error if configured */
+                    if (addNewBooksDto.StopOnFirstError)
+                    {
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                    }
+                    continue;
+                }
+
+                /* Check for duplicate within current batch */
+                if (currentBatchTitles.Contains(title))
+                {
+                    var error = $"Duplicate title '{title}' found in the provided list.";
+                    validationErrors.Add(error);
+
+                    /* Stop on first error if configured */
+                    if (addNewBooksDto.StopOnFirstError)
+                    {
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                    }
+                    continue;
+                }
+
+                /* Add to current batch tracking */
+                currentBatchTitles.Add(title);
+
+                /* Create new Book DTO entity from add new book DTO */
+                BookDto newBookDto = new()
+                {
+                    Title = title,
+                    Description = addBookDto.Description?.Trim(),
+                    CreatedOn = addBookDto.CreatedOn,
+                    NumberOfPages = addBookDto.NumberOfPages,
+                    LanguageID = addBookDto.LanguageId
+                };
+
+                /* Converting book DTO to book model */
+                var newBook = newBookDto.FromBookDtoToBookModelExtension();
+
+                /* Add to list of books to be inserted */
+                booksToAdd.Add(newBook);
+            }
+
+            /* If ValidateAllBeforeInsert is true and there are errors, stop insertion */
+            if (addNewBooksDto.ValidateAllBeforeInsert && validationErrors.Any())
+            {
+                return Utility.GetResponse
+                (
+                    responseData: new { ValidationErrors = validationErrors },
+                    isSuccess: false,
+                    message: $"Validation failed for {validationErrors.Count} books. No books were added."
+                );
+            }
+
+            /* If no valid books to add, return error */
+            if (!booksToAdd.Any())
+            {
+                var errorMessage = validationErrors.Any() 
+                    ? $"No valid books to add. Errors: {string.Join("; ", validationErrors)}" 
+                    : "No valid books to add.";
+                
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: errorMessage);
+            }
+
+            /* Add all valid books to database in bulk */
+            await _applicationDbContext.Books.AddRangeAsync(booksToAdd);
+
+            /* Save changes to database */
+            await _applicationDbContext.SaveChangesAsync();
+
+            /* Convert the saved book models back to book DTOs to return as response */
+            var addedBooksDtos = booksToAdd.Select(book => book.FromBookModelToBookDtoExtension()).ToList();
+
+            /* Prepare response message */
+            var successMessage = validationErrors.Any()
+                ? $"{booksToAdd.Count} books added successfully. {validationErrors.Count} books skipped due to errors."
+                : $"{booksToAdd.Count} books added successfully.";
+
+            /* Return success response with added books DTOs */
+            return Utility.GetResponse(
+                responseData: new 
+                { 
+                    AddedBooks = addedBooksDtos,
+                    TotalAdded = addedBooksDtos.Count,
+                    TotalProvided = addNewBooksDto.Books.Count,
+                    TotalSkipped = validationErrors.Count,
+                    ValidationErrors = validationErrors.Any() ? validationErrors : null 
+                }, 
+                isSuccess: true, 
+                message: successMessage);
         }
 
         public async Task<ResponseDto> DeleteBookByTitleAsync(string title)
