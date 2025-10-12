@@ -21,8 +21,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+/* Registering Services */
 builder.Services.AddScoped<ICurrencyService, CurrencyImplementation>();
 builder.Services.AddScoped<IFilterService<Currency>, FilterImplementation<Currency>>();
+builder.Services.AddScoped<IBookService, BookImplementation>();
 
 
 var app = builder.Build();

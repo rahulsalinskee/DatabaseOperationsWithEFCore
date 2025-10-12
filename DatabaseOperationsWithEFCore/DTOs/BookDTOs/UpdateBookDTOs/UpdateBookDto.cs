@@ -1,8 +1,8 @@
 ﻿using DatabaseOperationsWithEFCore.DTOs.LanguageDTOs.LanguageDTO;
 
-namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
+namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.UpdateBookDTOs
 {
-    public class BookDto
+    public class UpdateBookDto
     {
         public string Title { get; set; }
 
@@ -12,10 +12,8 @@ namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
 
         public bool IsActive { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTime CreatedOn { get; set; } = DateTime.Now;
 
-        public int LanguageID { get; set; }
-
-        //public LanguageDto? LanguageDto { get; set; }
+        public int LanguageId { get; set; }
     }
 }

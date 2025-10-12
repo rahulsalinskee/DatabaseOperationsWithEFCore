@@ -1,8 +1,8 @@
 ﻿using DatabaseOperationsWithEFCore.DTOs.LanguageDTOs.LanguageDTO;
 
-namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
+namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs
 {
-    public class BookDto
+    public class AddBookDto
     {
         public string Title { get; set; }
 
@@ -14,8 +14,6 @@ namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
 
         public DateTime CreatedOn { get; set; }
 
-        public int LanguageID { get; set; }
-
-        //public LanguageDto? LanguageDto { get; set; }
+        public int LanguageId { get; set; }
     }
 }

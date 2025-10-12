@@ -6,6 +6,7 @@ using DatabaseOperationsWithEFCore.DTOs.ResponseDTOs;
 using DatabaseOperationsWithEFCore.Mapper.Currency;
 using DatabaseOperationsWithEFCore.Models;
 using DatabaseOperationsWithEFCore.Repository.Services;
+using DatabaseOperationsWithEFCore.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseOperationsWithEFCore.Repository.Implementations
@@ -23,33 +24,36 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto?> AddCurrencyAsync(AddNewCurrencyDto addNewCurrencyDto)
         {
+            /* Check if new currency DTO is null */
             if (addNewCurrencyDto is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "Currency data cannot be null.");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "New currency data cannot be null.");
             }
 
-            /* Validate the DTO properties */
-            if (string.IsNullOrWhiteSpace(addNewCurrencyDto.Title))
+            /* Check if new currency Title is null or blank or whitespace */
+            if (string.IsNullOrWhiteSpace(addNewCurrencyDto.Title) || string.IsNullOrEmpty(addNewCurrencyDto.Title))
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "Currency title cannot be null or empty.");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency title cannot be null or empty or white space.");
             }
 
             /* Check if a currency with the same title already exists */
-            var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: addNewCurrencyDto, currencyDtoType: CurrencyDtoType.AddCurrencyDto, existingCurrencies: this._applicationDbContext.Currencies);
+            var isCurrencyDuplicated = Utility.IsDuplicated(propertyValue: addNewCurrencyDto.Title, existingEntities: this._applicationDbContext.Currencies, propertySelector: currency => currency.Title);
 
             if (isCurrencyDuplicated)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "Currency with the same title already exists.");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency with the same title already exists.");
             }
             else
             {
                 /* Create new Currency entity */
-                Currency newCurrency = new()
+                CurrencyDto newCurrencyDto = new()
                 {
                     Title = addNewCurrencyDto.Title.Trim(),
                     Description = addNewCurrencyDto.Description?.Trim()
-                    // Add other properties as needed
                 };
+
+                /* Convert Currency DTO to Currency Model */
+                var newCurrency = newCurrencyDto.FromCurrencyDtoToCurrencyModelExtension();
 
                 /* Add Currency */
                 await _applicationDbContext.Currencies.AddAsync(newCurrency);
@@ -61,7 +65,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 var convertedCurrencyModelToCurrencyDto = newCurrency.FromCurrencyModelToCurrencyDtoExtension();
 
                 /* Return Response */
-                return GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully.");
+                return Utility.GetResponse(responseData: convertedCurrencyModelToCurrencyDto, isSuccess: true, message: "Currency added successfully.");
             }
         }
 
@@ -71,13 +75,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
             if (currencyById is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id}");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id}");
             }
             else
             {
                 this._applicationDbContext.Currencies.Remove(currencyById);
                 await this._applicationDbContext.SaveChangesAsync();
-                return GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
+                return Utility.GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
             }
         }
 
@@ -87,13 +91,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
             if (currencyByTitle is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {title}");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {title}");
             }
             else
             {
                 this._applicationDbContext.Currencies.Remove(currencyByTitle);
                 await this._applicationDbContext.SaveChangesAsync();
-                return GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
+                return Utility.GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
             }
         }
 
@@ -102,34 +106,31 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             var currencyByIdAndTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Id == id && currency.Title == title);
             if (currencyByIdAndTitle is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id} and Title - {title}");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id} and Title - {title}");
             }
             else
             {
                 this._applicationDbContext.Currencies.Remove(currencyByIdAndTitle);
                 await this._applicationDbContext.SaveChangesAsync();
-                return GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
+                return Utility.GetResponse(responseData: null, isSuccess: true, message: "Currency deleted successfully.");
             }
         }
 
         public async Task<ResponseDto?> GetAllCurrenciesAsync(string? columnName = null, string? filterKeyWord = null)
         {
-            /* Eager Loading of related data using Include method. LINQ's Select() is used to select the selected column to fetch instead of fetching all columns from database */
             var currencies = this._applicationDbContext.Currencies.Include(currency => currency.BookPrices).Select(currency => new Currency() { Id = currency.Id, Title = currency.Title }).AsQueryable();
 
             if (currencies.Any())
             {
                 var filteredCurrencies = this._filterOnCurrency.ApplyFilterOn(queryOn: currencies, columnName: columnName, filterKeyWord: filterKeyWord);
 
-                /* Convert currency Model to Currency DTO */
                 var results = await filteredCurrencies.Select(currency => currency.FromCurrencyModelToCurrencyDtoExtension()).ToListAsync();
 
-                /* Return Response */
-                return GetResponse(responseData: results, isSuccess: true, message: "Currencies retrieved successfully.");
+                return Utility.GetResponse(responseData: results, isSuccess: true, message: "Currencies retrieved successfully.");
             }
             else
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "No currencies found.");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "No currencies found.");
             }
         }
 
@@ -139,13 +140,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
             if (currencyById is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id}");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {id}");
             }
             else
             {
                 var currencyDtoById = currencyById.FromCurrencyModelToCurrencyDtoExtension();
 
-                return GetResponse(responseData: currencyDtoById, isSuccess: true, message: "Currency retrieved successfully.");
+                return Utility.GetResponse(responseData: currencyDtoById, isSuccess: true, message: "Currency retrieved successfully.");
             }
         }
 
@@ -153,7 +154,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
         {
             if (ids is null || !ids.Any())
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "No IDs provided for currency retrieval.");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "No IDs provided for currency retrieval.");
             }
             else
             {
@@ -161,36 +162,30 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
                 if (currenciesWithMultipleIds.Any())
                 {
-                    /* Convert the list of Currency models to a list of Currency DTOs */
                     var currenciesDto = currenciesWithMultipleIds.Select(currency => currency.FromCurrencyModelToCurrencyDtoExtension()).ToList();
 
-                    /* Convert the list of Currency models to a list of Currency DTOs */
-                    return GetResponse(responseData: currenciesDto, isSuccess: true, message: "Currencies retrieved successfully.");
+                    return Utility.GetResponse(responseData: currenciesDto, isSuccess: true, message: "Currencies retrieved successfully.");
                 }
                 else
                 {
-                    return GetResponse(responseData: null, isSuccess: false, message: "No Currencies found with the provided IDs.");
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "No Currencies found with the provided IDs.");
                 }
             }
         }
 
         public async Task<ResponseDto?> GetCurrencyByTitleAsync(string title)
         {
-            /* Should not use Where clause with FirstOrDefault. It hits the performance */
-            //var currencyByTitle = await this._applicationDbContext.Currencies.Where(currency => currency.Title == title).FirstOrDefaultAsync();
-
-            /* This is how we should use Where clause condition in FirstOrDefault without Where clause */
             var currencyByTitle = await this._applicationDbContext.Currencies.FirstOrDefaultAsync(currency => currency.Title == title);
 
             if (currencyByTitle is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {title}");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: $"No Currency Found with ID - {title}");
             }
             else
             {
                 var currencyDtoByTitle = currencyByTitle.FromCurrencyModelToCurrencyDtoExtension();
 
-                return GetResponse(responseData: currencyDtoByTitle, isSuccess: true, message: "Currency retrieved successfully.");
+                return Utility.GetResponse(responseData: currencyDtoByTitle, isSuccess: true, message: "Currency retrieved successfully.");
             }
         }
 
@@ -198,7 +193,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
         {
             if (updateCurrencyDto is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "Update data cannot be null");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Update data cannot be null");
             }
             else
             {
@@ -206,11 +201,11 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
                 if (currencyById is null)
                 {
-                    return GetResponse(responseData: null, isSuccess: false, message: "Currency does not found!");
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency does not found!");
                 }
 
                 var existingCurrencies = this._applicationDbContext.Currencies.Where(currency => currency.Id != id);
-                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto, currencyDtoType: CurrencyDtoType.UpdateCurrencyDto, existingCurrencies: existingCurrencies);
+                var isCurrencyDuplicated = Utility.IsDuplicated(propertyValue: updateCurrencyDto.Title, existingEntities: existingCurrencies, propertySelector: currency => currency.Title);
 
                 if (!isCurrencyDuplicated)
                 {
@@ -220,11 +215,11 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
                     await this._applicationDbContext.SaveChangesAsync();
 
-                    return GetResponse(responseData: updatedCurrencyDto, isSuccess: true, message: "Currency updated successfully.");
+                    return Utility.GetResponse(responseData: updatedCurrencyDto, isSuccess: true, message: "Currency updated successfully.");
                 }
                 else
                 {
-                    return GetResponse(responseData: null, isSuccess: false, message: "Currency with same tile exists!");
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency with same tile exists!");
                 }
             }
         }
@@ -233,7 +228,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
         {
             if (updateCurrencyDto is null)
             {
-                return GetResponse(responseData: null, isSuccess: false, message: "Update data cannot be null");
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Update data cannot be null");
             }
             else
             {
@@ -241,12 +236,11 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
                 if (currencyByTitle is null)
                 {
-                    return GetResponse(responseData: null, isSuccess: false, message: "Currency does not found!");
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency does not found!");
                 }
 
                 var existingCurrencies = this._applicationDbContext.Currencies.Where(currency => currency.Title != title);
-                var isCurrencyDuplicated = IsCurrencyDuplicated(currencyDto: updateCurrencyDto,
-                    currencyDtoType: CurrencyDtoType.UpdateCurrencyDto, existingCurrencies: existingCurrencies);
+                var isCurrencyDuplicated = Utility.IsDuplicated(propertyValue: updateCurrencyDto.Title, existingEntities: existingCurrencies, propertySelector: currency => currency.Title);
 
                 if (!isCurrencyDuplicated)
                 {
@@ -256,60 +250,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
                     await this._applicationDbContext.SaveChangesAsync();
 
-                    return GetResponse(responseData: updatedCurrencyDto, isSuccess: true, message: "Currency updated successfully.");
+                    return Utility.GetResponse(responseData: updatedCurrencyDto, isSuccess: true, message: "Currency updated successfully.");
                 }
                 else
                 {
-                    return GetResponse(responseData: null, isSuccess: false, message: "Currency with same tile exists!");
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "Currency with same tile exists!");
                 }
             }
-        }
-
-        private static ResponseDto? GetResponse(object? responseData, bool isSuccess, string message)
-        {
-            return new ResponseDto()
-            {
-                Response = responseData,
-                IsSuccess = isSuccess,
-                Message = message
-            };
-        }
-
-        private static bool IsCurrencyDuplicated(object currencyDto, CurrencyDtoType currencyDtoType, IEnumerable<Currency> existingCurrencies)
-        {
-            string titleToCheck = currencyDtoType switch
-            {
-                CurrencyDtoType.AddCurrencyDto => ((AddNewCurrencyDto)currencyDto).Title,
-                CurrencyDtoType.UpdateCurrencyDto => ((UpdateCurrencyDto)currencyDto).Title,
-                _ => throw new ArgumentException("Invalid currency DTO type")
-            };
-
-            /* Old version of Switch Case statement of checking title
-            string titleToCheck;
-             
-            switch (currencyDtoType)
-            {
-                case CurrencyDtoType.AddCurrencyDto:
-                    titleToCheck = ((AddNewCurrencyDto)currencyDto).Title;
-                    break;
-                case CurrencyDtoType.UpdateCurrencyDto:
-                    titleToCheck = ((UpdateCurrencyDto)currencyDto).Title;
-                    break;
-                default:
-                    throw new ArgumentException("Invalid currency DTO type");
-            }
-             
-            */
-
-            var isCurrencyDuplicated = existingCurrencies.Any(existingCurrency => existingCurrency.Title.Equals(titleToCheck, StringComparison.OrdinalIgnoreCase));
-
-            return isCurrencyDuplicated;
-        }
-
-        private enum CurrencyDtoType
-        {
-            AddCurrencyDto,
-            UpdateCurrencyDto
         }
     }
 }
