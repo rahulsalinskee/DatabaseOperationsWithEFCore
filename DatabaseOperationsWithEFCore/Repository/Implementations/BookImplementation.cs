@@ -96,13 +96,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Validate each book */
                 if (string.IsNullOrWhiteSpace(addBookDto.Title))
                 {
-                    var error = "One or more books have empty titles.";
-                    validationErrors.Add(error);
+                    var errorMessage = "One or more books have empty titles.";
+                    validationErrors.Add(errorMessage);
 
                     /* Stop on first error if configured */
                     if (addNewBooksDto.StopOnFirstError)
                     {
-                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: errorMessage);
                     }
                     continue;
                 }
@@ -112,13 +112,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Check for duplicate in database */
                 if (existingBookTitles.Contains(title.ToLower()))
                 {
-                    var error = $"Book with title '{title}' already exists in database.";
-                    validationErrors.Add(error);
+                    var errorMessage = $"Book with title '{title}' already exists in database.";
+                    validationErrors.Add(errorMessage);
 
                     /* Stop on first error if configured */
                     if (addNewBooksDto.StopOnFirstError)
                     {
-                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: errorMessage);
                     }
                     continue;
                 }
@@ -126,13 +126,13 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Check for duplicate within current batch */
                 if (currentBatchTitles.Contains(title))
                 {
-                    var error = $"Duplicate title '{title}' found in the provided list.";
-                    validationErrors.Add(error);
+                    var errorMessage = $"Duplicate title '{title}' found in the provided list.";
+                    validationErrors.Add(errorMessage);
 
                     /* Stop on first error if configured */
                     if (addNewBooksDto.StopOnFirstError)
                     {
-                        return Utility.GetResponse(responseData: null, isSuccess: false, message: error);
+                        return Utility.GetResponse(responseData: null, isSuccess: false, message: errorMessage);
                     }
                     continue;
                 }

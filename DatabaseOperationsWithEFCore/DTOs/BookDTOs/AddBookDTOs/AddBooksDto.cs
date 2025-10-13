@@ -6,7 +6,7 @@ namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs
     {
         [Required(ErrorMessage = "Books list cannot be null or empty")]
         [MinLength(1, ErrorMessage = "At least one book must be provided")]
-        public List<AddBookDto> Books { get; set; } = new();
+        public List<AddBookDto> Books { get; set; }
 
         /// <summary>
         /// If true, stops the entire operation if any book fails validation
