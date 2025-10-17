@@ -35,7 +35,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
 
             /* Checking for duplicate book */
-            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title, existingEntities: _applicationDbContext.Books, propertySelector: book => book.Title);
+            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title, 
+                existingEntities: _applicationDbContext.Books, propertySelector: book => book.Title);
 
             /* If duplicate book found, return duplication error */
             if (isDuplicatedBook)
@@ -51,7 +52,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                     Description = addNewBookDto?.Description,
                     CreatedOn = addNewBookDto.CreatedOn,
                     NumberOfPages = addNewBookDto.NumberOfPages,
-                    LanguageID = addNewBookDto.LanguageId
+                    LanguageID = addNewBookDto.LanguageId,
+                    Author = addNewBookDto.Author,
                 };
 
                 /* Converting book DTO to book model */

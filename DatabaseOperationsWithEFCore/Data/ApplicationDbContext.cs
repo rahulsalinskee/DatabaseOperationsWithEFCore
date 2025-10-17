@@ -18,6 +18,8 @@ namespace DatabaseOperationsWithEFCore.Data
 
         public DbSet<Currency> Currencies { get; set; }
 
+        public DbSet<Author> Authors { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             /* Master Table - Currency */

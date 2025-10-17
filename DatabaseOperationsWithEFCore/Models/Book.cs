@@ -22,10 +22,14 @@
         *       B. Add a property of type int in Book class which will hold the LanguageId (Line: 26 in Book.cs)
         *       
         *  Step 2:
-        *       A. Add a property of type ICollection<Book> in Language class (line: 20 in Language.cs)
+        *       A. Add a property of type ICollection<Book> in Language class (line: 21 in Language.cs)
         */
         public int LanguageId { get; set; }
 
         public Language Language { get; set; }
+
+        /* A book must have an author */
+        public int? AuthorId { get; set; }
+        public Author? Author { get; set; }
     }
 }

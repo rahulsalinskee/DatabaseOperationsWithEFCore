@@ -1,4 +1,5 @@
-﻿using DatabaseOperationsWithEFCore.DTOs.LanguageDTOs.LanguageDTO;
+﻿using DatabaseOperationsWithEFCore.DTOs.AuthorDTOs.AuthorDTO;
+using DatabaseOperationsWithEFCore.Models;
 
 namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
 {
@@ -16,6 +17,9 @@ namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO
 
         public int LanguageID { get; set; }
 
-        //public LanguageDto? LanguageDto { get; set; }
+        //public Language? Language { get; set; }
+
+        public int? AuthorId { get; set; }
+        public Author? Author { get; set; }
     }
 }

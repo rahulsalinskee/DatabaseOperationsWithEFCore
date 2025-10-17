@@ -1,4 +1,4 @@
-﻿using DatabaseOperationsWithEFCore.DTOs.LanguageDTOs.LanguageDTO;
+﻿using DatabaseOperationsWithEFCore.Models;
 
 namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs
 {
@@ -15,5 +15,11 @@ namespace DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs
         public DateTime CreatedOn { get; set; }
 
         public int LanguageId { get; set; }
+
+        //public Language? Language { get; set; }
+
+        public int? AuthorId { get; set; }
+
+        public Author? Author { get; set; }
     }
 }

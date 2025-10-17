@@ -20,6 +20,9 @@ namespace DatabaseOperationsWithEFCore.Mapper.Book
                 IsActive = bookDto.IsActive,
                 CreatedOn = bookDto.CreatedOn,
                 LanguageId = bookDto.LanguageID,
+                //Language = bookDto.Language,
+                AuthorId = bookDto.Author?.Id,
+                Author = bookDto.Author,
             };
         }
 
@@ -38,6 +41,9 @@ namespace DatabaseOperationsWithEFCore.Mapper.Book
                 IsActive = book.IsActive,
                 CreatedOn = book.CreatedOn,
                 LanguageID = book.LanguageId,
+                //Language = book.Language,
+                AuthorId = book.Author?.Id,
+                Author = book.Author,
             };
         }
     }
