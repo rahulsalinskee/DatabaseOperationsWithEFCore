@@ -14,6 +14,7 @@ namespace DatabaseOperationsWithEFCore.Mapper.Book
         {
             return new Models.Book()
             {
+                Id = bookDto.Id,
                 Title = bookDto.Title,
                 Description = bookDto.Description,
                 NumberOfPages = bookDto.NumberOfPages,
@@ -35,6 +36,7 @@ namespace DatabaseOperationsWithEFCore.Mapper.Book
         {
             return new BookDto()
             {
+                Id = book.Id,
                 Title = book.Title,
                 Description = book.Description,
                 NumberOfPages = book.NumberOfPages,

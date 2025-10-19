@@ -35,7 +35,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
 
             /* Checking for duplicate book */
-            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title, 
+            var isDuplicatedBook = Utility.IsDuplicated(propertyValue: addNewBookDto.Title,
                 existingEntities: _applicationDbContext.Books, propertySelector: book => book.Title);
 
             /* If duplicate book found, return duplication error */
@@ -173,10 +173,10 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             /* If no valid books to add, return error */
             if (!booksToAdd.Any())
             {
-                var errorMessage = validationErrors.Any() 
-                    ? $"No valid books to add. Errors: {string.Join("; ", validationErrors)}" 
+                var errorMessage = validationErrors.Any()
+                    ? $"No valid books to add. Errors: {string.Join("; ", validationErrors)}"
                     : "No valid books to add.";
-                
+
                 return Utility.GetResponse(responseData: null, isSuccess: false, message: errorMessage);
             }
 
@@ -196,15 +196,15 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
             /* Return success response with added books DTOs */
             return Utility.GetResponse(
-                responseData: new 
-                { 
+                responseData: new
+                {
                     AddedBooks = addedBooksDtos,
                     TotalAdded = addedBooksDtos.Count,
                     TotalProvided = addNewBooksDto.Books.Count,
                     TotalSkipped = validationErrors.Count,
-                    ValidationErrors = validationErrors.Any() ? validationErrors : null 
-                }, 
-                isSuccess: true, 
+                    ValidationErrors = validationErrors.Any() ? validationErrors : null
+                },
+                isSuccess: true,
                 message: successMessage);
         }
 
@@ -316,6 +316,78 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Return success response with updated book DTO */
                 return Utility.GetResponse(responseData: updatedBookDto, isSuccess: true, message: "Book updated successfully");
             }
+        }
+
+        public async Task<ResponseDto> UpdateBookWithSingleDatabaseHitAsync(UpdateBookDto updateBookDto)
+        {
+            BookDto bookDto = new()
+            {
+                Id = updateBookDto.Id, // ← MISSING - This is essential!
+                Title = updateBookDto.Title,
+                Description = updateBookDto.Description,
+                NumberOfPages = updateBookDto.NumberOfPages,
+                CreatedOn = updateBookDto.CreatedOn,
+                LanguageID = updateBookDto.LanguageId,
+                IsActive = updateBookDto.IsActive,
+                AuthorId = updateBookDto.Author?.Id ?? updateBookDto.AuthorId,
+                Author = updateBookDto.Author,
+            };
+
+            var book = bookDto.FromBookDtoToBookModelExtension();
+
+            this._applicationDbContext.Entry<Book>(book).State = EntityState.Modified;
+
+            await _applicationDbContext.SaveChangesAsync();
+
+            var updatedBookDto = book.FromBookModelToBookDtoExtension();
+
+            return Utility.GetResponse(responseData: updatedBookDto, isSuccess: true, message: "Book updated successfully");
+        }
+
+        public async Task<ResponseDto> UpdateBooksWithoutDatabaseSingleHitAsync(UpdateBooksDto updateBooksDto)
+        {
+            // Get IDs from the update request
+            var bookIdsToUpdate = updateBooksDto.UpdateBookDto.Select(updateBooksDto => updateBooksDto.Id).ToList();
+
+            // Fetch only the books that need to be updated
+            var booksToUpdate = await this._applicationDbContext.Books.Where(book => bookIdsToUpdate.Contains(book.Id)).ToListAsync();
+
+            // Create dictionary for fast lookup
+            var updateDictionaryWithUpdateBookDto = updateBooksDto.UpdateBookDto.ToDictionary(updateBookDto => updateBookDto.Id);
+
+            // Update each book
+            foreach (var bookToUpdate in booksToUpdate)
+            {
+                if (updateDictionaryWithUpdateBookDto.TryGetValue(bookToUpdate.Id, out var updateData))
+                {
+                    bookToUpdate.Title = updateData.Title;
+                    bookToUpdate.NumberOfPages += 10;
+                }
+            }
+
+            // Save all changes in a single database hit
+            await this._applicationDbContext.SaveChangesAsync();
+
+            // Convert to DTOs for response
+            var booksDto = booksToUpdate.Select(book => book.FromBookModelToBookDtoExtension()).ToList();
+
+            return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books updated successfully");
+        }
+
+        public async Task<ResponseDto> UpdateBooksWithSingleHitInDatabaseAsync(UpdateBooksDto updateBooksDto)
+        {
+            /* 
+            * ExecuteUpdateAsync = It can only set the same value or use simple expressions for all records. 
+            * We cannot use it to update each book with a different title from the coming DTO. 
+            */
+
+            var rowsAffected = await this._applicationDbContext.Books.Where(book => book.AuthorId == null).
+                ExecuteUpdateAsync(property => property
+                    .SetProperty(book => book.Title, book => "Updated " + book.Title)
+                    .SetProperty(book => book.NumberOfPages, book => book.NumberOfPages + 10)
+                );
+
+            return Utility.GetResponse(responseData: new { RowsAffected = rowsAffected }, isSuccess: true, message: $"{rowsAffected} books are updated successfully");
         }
     }
 }

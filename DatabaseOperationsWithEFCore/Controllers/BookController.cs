@@ -1,8 +1,10 @@
 ﻿using DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.BookDTOs.UpdateBookDTOs;
+using DatabaseOperationsWithEFCore.DTOs.ResponseDTOs;
 using DatabaseOperationsWithEFCore.Repository.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 
 namespace DatabaseOperationsWithEFCore.Controllers
 {
@@ -61,6 +63,40 @@ namespace DatabaseOperationsWithEFCore.Controllers
         public async Task<IActionResult> UpdateBookByTitleAsync([FromRoute] string title, [FromBody] UpdateBookDto updateBookDto)
         {
             var response = await bookService.UpdateBookByTitleAsync(title: title, updateBookDto: updateBookDto);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpPut("UpdateBookWithSingleDatabaseHit")]
+        public async Task<IActionResult> UpdateBookWithSingleDatabaseHitAsync([FromBody] UpdateBookDto updateBookDto)
+        {
+            var response = await bookService.UpdateBookWithSingleDatabaseHitAsync(updateBookDto: updateBookDto);
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpPut("UpdateBooksWithoutDatabaseSingleHit")]
+        public async Task<IActionResult> UpdateBooksWithoutDatabaseSingleHitAsync([FromBody] UpdateBooksDto updateBooksDto)
+        {
+            var response = await bookService.UpdateBooksWithoutDatabaseSingleHitAsync(updateBooksDto: updateBooksDto);
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
+        [HttpPut("UpdateBooksWithSingleHitInDatabase")]
+        public async Task<IActionResult> UpdateBooksWithSingleHitInDatabaseAsync(UpdateBooksDto updateBooksDto)
+        {
+            var response = await bookService.UpdateBooksWithSingleHitInDatabaseAsync(updateBooksDto: updateBooksDto);
 
             if (response.IsSuccess)
             {
