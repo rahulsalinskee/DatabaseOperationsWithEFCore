@@ -115,5 +115,41 @@ namespace DatabaseOperationsWithEFCore.Controllers
             }
             return NotFound(response);
         }
+
+        [HttpDelete("DeleteBookWithOneDataBaseHit/{id:int}")]
+        public async Task<IActionResult> DeleteBookByIdWithOneDataBaseHitAsync([FromRoute] int id)
+        {
+            var response = await bookService.DeleteBookByIdWithOneDataBaseHitAsync(id: id);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpDelete("DeleteBulkBooks/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
+        public async Task<IActionResult> DeleteBulkBooks([FromRoute] int fromBookIdToDelete, [FromRoute] int toBookIdToDelete)
+        {
+            var response = await bookService.DeleteBulkRecordsAsync(fromBookIdToDelete: fromBookIdToDelete, toBookIdToDelete: toBookIdToDelete);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpDelete("DeleteBulkRecordsWithOneDatabaseHit/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
+        public async Task<IActionResult> DeleteBulkRecordsWithOneDatabaseHitAsync(int fromBookIdToDelete, int toBookIdToDelete)
+        {
+            var response = await bookService.DeleteBulkRecordsWithOneDatabaseHitAsync(fromBookIdToDelete: fromBookIdToDelete, toBookIdToDelete: toBookIdToDelete);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
     }
 }

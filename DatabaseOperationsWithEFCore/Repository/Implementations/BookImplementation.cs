@@ -1,6 +1,7 @@
 ﻿using DatabaseOperationsWithEFCore.Data;
 using DatabaseOperationsWithEFCore.DTOs.BookDTOs.AddBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.BookDTOs.BookDTO;
+using DatabaseOperationsWithEFCore.DTOs.BookDTOs.DeleteBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.BookDTOs.UpdateBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.ResponseDTOs;
 using DatabaseOperationsWithEFCore.Mapper.Book;
@@ -230,6 +231,107 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 /* Return success response with deleted book DTO */
                 return Utility.GetResponse(responseData: deletedBookDto, isSuccess: true, message: "Book Deleted Successfully!");
             }
+        }
+
+        public async Task<ResponseDto> DeleteBookByIdWithOneDataBaseHitAsync(int id)
+        {
+            Book book = new() { Id = id };
+
+            this._applicationDbContext.Entry<Book>(book).State = EntityState.Deleted;
+
+            await this._applicationDbContext.SaveChangesAsync();
+
+            return Utility.GetResponse(responseData: book, isSuccess: true, message: "Book Deleted Successfully!");
+        }
+
+        public async Task<ResponseDto> DeleteBulkRecordsAsync(int fromBookIdToDelete, int toBookIdToDelete)
+        {
+            if ((fromBookIdToDelete <= 0) || (toBookIdToDelete <= 0) || (fromBookIdToDelete > toBookIdToDelete) || (fromBookIdToDelete == 0 && toBookIdToDelete == 0))
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Invalid book ID range provided for deletion.");
+            }
+
+            if (fromBookIdToDelete == toBookIdToDelete)
+            {
+                return await DeleteBookByIdWithOneDataBaseHitAsync(id: fromBookIdToDelete);
+            }
+
+            /* Check if any books exist in the range */
+            var doesAnyBookExistInThisRange = await this._applicationDbContext.Books.AnyAsync(book => book.Id >= fromBookIdToDelete && book.Id <= toBookIdToDelete);
+
+            if (!doesAnyBookExistInThisRange)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "No books found in the specified ID range for deletion.");
+            }
+
+            /* Get all book IDs that exist within the range */
+            var bookIdsExistWithinRangeToDelete = await this._applicationDbContext.Books.Where<Book>(book => book.Id >= fromBookIdToDelete && book.Id <= toBookIdToDelete).Select(book => book.Id).ToListAsync();
+
+            /* Generate the complete range of IDs expected from parameters */
+            var expectedBookIds = Enumerable.Range(fromBookIdToDelete, toBookIdToDelete - fromBookIdToDelete + 1).ToList();
+
+            /* Find missing IDs in the range */
+            var missingBookIds = expectedBookIds.Except(bookIdsExistWithinRangeToDelete).ToList();
+
+            /* Check if all IDs in the range exist in the database */
+            if (missingBookIds.Any())
+            {
+                return Utility.GetResponse(responseData: new { MissingBookIds = missingBookIds }, isSuccess: false, message: $"Cannot delete: The following book IDs are missing from the range: { string.Join(", ", missingBookIds) }");
+            }
+
+            /* Fetch books to delete (Already validated they all exist in database) */
+            var booksInRange = await this._applicationDbContext.Books.Where(book => book.Id >= fromBookIdToDelete && book.Id <= toBookIdToDelete).ToListAsync();
+
+            /* Deleting the range of Book Ids which needs to be deleted */
+            this._applicationDbContext.Books.RemoveRange(booksInRange);
+
+            await this._applicationDbContext.SaveChangesAsync();
+
+            return Utility.GetResponse(responseData: new { BooksInRange = booksInRange }, isSuccess: true, message: $"{booksInRange} books are deleted successfully");
+        }
+
+        public async Task<ResponseDto> DeleteBulkRecordsWithOneDatabaseHitAsync(int fromBookIdToDelete, int toBookIdToDelete)
+        {
+            // Validate input range
+            if ((fromBookIdToDelete <= 0) || (toBookIdToDelete <= 0) || (fromBookIdToDelete > toBookIdToDelete))
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Invalid book ID range provided for deletion.");
+            }
+
+            if (fromBookIdToDelete == toBookIdToDelete)
+            {
+                return await DeleteBookByIdWithOneDataBaseHitAsync(id: fromBookIdToDelete);
+            }
+
+            // First, validate that all IDs exist (one query)
+            var existingBookIds = await this._applicationDbContext.Books.Where(book => book.Id >= fromBookIdToDelete && book.Id <= toBookIdToDelete).Select(book => book.Id).ToListAsync();
+
+            if (!existingBookIds.Any())
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "No books found in the specified ID range for deletion.");
+            }
+
+            var expectedBookIds = Enumerable.Range(fromBookIdToDelete, toBookIdToDelete - fromBookIdToDelete + 1).ToList();
+            var missingBookIds = expectedBookIds.Except(existingBookIds).ToList();
+
+            if (missingBookIds.Any())
+            {
+                return Utility.GetResponse(
+                    responseData: new { MissingBookIds = missingBookIds },
+                    isSuccess: false,
+                    message: $"Cannot delete: Missing book IDs: {string.Join(", ", missingBookIds)}");
+            }
+
+            /* Setting Entry state as Deleted */
+            //this._applicationDbContext.Entry<Book>(new Book()).State = EntityState.Deleted;
+
+            // Execute delete directly in database (EF Core 7+)
+            var deletedCount = await this._applicationDbContext.Books.Where(book => book.Id >= fromBookIdToDelete && book.Id <= toBookIdToDelete).ExecuteDeleteAsync();
+
+            return Utility.GetResponse(
+                responseData: new { DeletedCount = deletedCount, DeletedBookIds = existingBookIds },
+                isSuccess: true,
+                message: $"{deletedCount} book(s) deleted successfully from ID {fromBookIdToDelete} to {toBookIdToDelete}");
         }
 
         public async Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn = null, string? filterKeyWord = null)
