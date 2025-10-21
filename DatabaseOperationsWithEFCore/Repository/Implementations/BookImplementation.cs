@@ -334,7 +334,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 message: $"{deletedCount} book(s) deleted successfully from ID {fromBookIdToDelete} to {toBookIdToDelete}");
         }
 
-        public async Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn = null, string? filterKeyWord = null)
+        public async Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn, string? filterKeyWord)
         {
             var books = await _applicationDbContext.Books.AsNoTracking().ToListAsync();
 
@@ -352,6 +352,28 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 {
                     var booksDto = books.Select(book => new { ResponseData = book.FromBookModelToBookDtoExtension(), AuthorName = book.Author?.Name ?? "Unknown" }).ToList();
 
+                    return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books retrieved successfully");
+                }
+            }
+        }
+
+        public async Task<ResponseDto> GetAllBooksByEagerLoadingAsync(string? filterOnColumn, string? filterKeyWord)
+        {
+            var books = await this._applicationDbContext.Books.AsNoTracking().Include(book => book.Author).ToListAsync();
+
+            if (books is null)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Books is null");
+            }
+            else
+            {
+                if (!books.Any())
+                {
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "No books found");
+                }
+                else
+                {
+                    var booksDto = books.Select(book => new { ResponseData = book.FromBookModelToBookDtoExtension() }).ToList();
                     return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books retrieved successfully");
                 }
             }

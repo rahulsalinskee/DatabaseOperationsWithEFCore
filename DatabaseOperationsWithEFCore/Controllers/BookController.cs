@@ -12,7 +12,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
     [ApiController]
     public class BookController(IBookService bookService) : ControllerBase
     {
-        [HttpGet("GetAllBooks")]
+        [HttpGet("Books")]
         public async Task<IActionResult> GetAllBooksAsync([FromQuery] string? filterOnColumn, [FromQuery] string? filterKeyWord)
         {
             var response = await bookService.GetAllBooksAsync(filterOnColumn: filterOnColumn, filterKeyWord: filterKeyWord);
@@ -24,7 +24,19 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
-        [HttpGet("GetBookById/{id:int}")]
+        [HttpGet("get-all-books-by-eager-loading-books/")]
+        public async Task<IActionResult> GetAllBooksByEagerLoadingAsync([FromQuery] string? filterOnColumn = null, [FromQuery] string? filterKeyWord = null)
+        {
+            var response = await bookService.GetAllBooksByEagerLoadingAsync(filterOnColumn: filterOnColumn, filterKeyWord: filterKeyWord);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpGet("book/{id:int}")]
         public async Task<IActionResult> GetBookByTitleAsync([FromRoute] string title)
         {
             var response = await bookService.GetBookByTitleAsync(title: title);
@@ -59,7 +71,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut("UpdateBook/{title}")]
+        [HttpPut("update-book/{title}")]
         public async Task<IActionResult> UpdateBookByTitleAsync([FromRoute] string title, [FromBody] UpdateBookDto updateBookDto)
         {
             var response = await bookService.UpdateBookByTitleAsync(title: title, updateBookDto: updateBookDto);
@@ -71,7 +83,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut("UpdateBookWithSingleDatabaseHit")]
+        [HttpPut("update-book-with-single-database-hit")]
         public async Task<IActionResult> UpdateBookWithSingleDatabaseHitAsync([FromBody] UpdateBookDto updateBookDto)
         {
             var response = await bookService.UpdateBookWithSingleDatabaseHitAsync(updateBookDto: updateBookDto);
@@ -82,7 +94,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut("UpdateBooksWithoutDatabaseSingleHit")]
+        [HttpPut("update-books-without-database-single-hit")]
         public async Task<IActionResult> UpdateBooksWithoutDatabaseSingleHitAsync([FromBody] UpdateBooksDto updateBooksDto)
         {
             var response = await bookService.UpdateBooksWithoutDatabaseSingleHitAsync(updateBooksDto: updateBooksDto);
@@ -93,7 +105,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut("UpdateBooksWithSingleHitInDatabase")]
+        [HttpPut("update-books-with-single-hit-in-database")]
         public async Task<IActionResult> UpdateBooksWithSingleHitInDatabaseAsync(UpdateBooksDto updateBooksDto)
         {
             var response = await bookService.UpdateBooksWithSingleHitInDatabaseAsync(updateBooksDto: updateBooksDto);
@@ -105,7 +117,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpDelete("DeleteBook/{title}")]
+        [HttpDelete("delete-book/{title}")]
         public async Task<IActionResult> DeleteBookByTitleAsync([FromRoute] string title)
         {
             var response = await bookService.DeleteBookByTitleAsync(title: title);
@@ -116,7 +128,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
-        [HttpDelete("DeleteBookWithOneDataBaseHit/{id:int}")]
+        [HttpDelete("delete-book-with-one-database-hit/{id:int}")]
         public async Task<IActionResult> DeleteBookByIdWithOneDataBaseHitAsync([FromRoute] int id)
         {
             var response = await bookService.DeleteBookByIdWithOneDataBaseHitAsync(id: id);
@@ -128,7 +140,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
-        [HttpDelete("DeleteBulkBooks/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
+        [HttpDelete("delete-bulk-books/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
         public async Task<IActionResult> DeleteBulkBooks([FromRoute] int fromBookIdToDelete, [FromRoute] int toBookIdToDelete)
         {
             var response = await bookService.DeleteBulkRecordsAsync(fromBookIdToDelete: fromBookIdToDelete, toBookIdToDelete: toBookIdToDelete);
@@ -140,7 +152,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
-        [HttpDelete("DeleteBulkRecordsWithOneDatabaseHit/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
+        [HttpDelete("delete-bulk-records-with-one-database-hit/{fromBookIdToDelete:int}/{toBookIdToDelete:int}")]
         public async Task<IActionResult> DeleteBulkRecordsWithOneDatabaseHitAsync(int fromBookIdToDelete, int toBookIdToDelete)
         {
             var response = await bookService.DeleteBulkRecordsWithOneDatabaseHitAsync(fromBookIdToDelete: fromBookIdToDelete, toBookIdToDelete: toBookIdToDelete);

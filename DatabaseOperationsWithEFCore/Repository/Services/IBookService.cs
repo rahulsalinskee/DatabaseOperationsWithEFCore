@@ -8,7 +8,9 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 {
     public interface IBookService
     {
-        public Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn = null, string? filterKeyWord = null);
+        public Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn, string? filterKeyWord);
+
+        public Task<ResponseDto> GetAllBooksByEagerLoadingAsync(string? filterOnColumn, string? filterKeyWord);
 
         public Task<ResponseDto> GetBookByTitleAsync(string title);
 
