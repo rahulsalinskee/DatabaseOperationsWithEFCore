@@ -336,7 +336,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         public async Task<ResponseDto> GetAllBooksAsync(string? filterOnColumn = null, string? filterKeyWord = null)
         {
-            var books = await _applicationDbContext.Books.ToListAsync();
+            var books = await _applicationDbContext.Books.AsNoTracking().ToListAsync();
 
             if (books is null)
             {
@@ -350,7 +350,7 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 }
                 else
                 {
-                    var booksDto = books.Select(book => book.FromBookModelToBookDtoExtension()).ToList();
+                    var booksDto = books.Select(book => new { ResponseData = book.FromBookModelToBookDtoExtension(), AuthorName = book.Author?.Name ?? "Unknown" }).ToList();
 
                     return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books retrieved successfully");
                 }

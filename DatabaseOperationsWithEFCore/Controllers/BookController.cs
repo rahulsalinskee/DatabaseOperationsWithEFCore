@@ -36,7 +36,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
-        [HttpPost("AddBook")]
+        [HttpPost("add-book")]
         public async Task<IActionResult> AddBookAsync([FromBody] AddBookDto addBookDto)
         {
             var response = await bookService.AddBookAsync(addBookDto: addBookDto);
@@ -48,7 +48,7 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return BadRequest(response);
         }
 
-        [HttpPost("AddBooks")]
+        [HttpPost("books")]
         public async Task<IActionResult> AddBooksAsync([FromBody] AddBooksDto addBooksDto)
         {
             var response = await bookService.AddBooksAsync(addNewBooksDto: addBooksDto);
