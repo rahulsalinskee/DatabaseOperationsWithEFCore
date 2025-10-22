@@ -426,6 +426,17 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
 
         //    return Utility.GetResponse(responseData: languagesDto, isSuccess: true, message: "Languages retrieved successfully with explicit loading");
         //}
+        
+        public async Task<ResponseDto> GetLastBookByLazyLoadingAsync()
+        {
+            var lastBook = await this._applicationDbContext.Books.OrderBy(book => book.Title).LastOrDefaultAsync();
+
+            var authorName = lastBook?.Author?.Name;
+
+            var lastBookDto = lastBook.FromBookModelToBookDtoExtension();
+
+            return Utility.GetResponse(responseData: new { LastBook = lastBookDto, AuthorName = authorName }, isSuccess: true, message: "Last book retrieved successfully with lazy loading");
+        }
 
         public async Task<ResponseDto> UpdateBookByTitleAsync(string title, UpdateBookDto updateBookDto)
         {

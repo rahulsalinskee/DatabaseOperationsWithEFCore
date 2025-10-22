@@ -73,6 +73,18 @@ namespace DatabaseOperationsWithEFCore.Controllers
         //    return BadRequest(response);
         //}
 
+        [HttpGet("last-book-by-lazy-loading")]
+        public async Task<IActionResult> GetLastBookByLazyLoadingAsync()
+        {
+            var response = await bookService.GetLastBookByLazyLoadingAsync();
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
         [HttpPost("add-book")]
         public async Task<IActionResult> AddBookAsync([FromBody] AddBookDto addBookDto)
         {

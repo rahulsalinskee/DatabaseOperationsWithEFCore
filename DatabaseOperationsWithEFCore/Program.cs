@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen();
 /* Registering Db Context For Db Operations using SQL Server and reading connection string from AppSettings.JSON */
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
+    option.UseLazyLoadingProxies();
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).LogTo(Console.WriteLine);
 });
 

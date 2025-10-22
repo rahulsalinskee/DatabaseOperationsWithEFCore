@@ -19,6 +19,6 @@
         *       A. Add a property of type ICollection<Book> in Language class (line: 20 in Language.cs)
         *   Current Step: This is Step 2
         */
-        public ICollection<BookPrice> BookPrices { get; set; }
+        public virtual ICollection<BookPrice> BookPrices { get; set; }
     }
 }

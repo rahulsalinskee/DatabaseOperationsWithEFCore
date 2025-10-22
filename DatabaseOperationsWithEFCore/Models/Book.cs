@@ -26,10 +26,11 @@
         */
         public int LanguageId { get; set; }
 
-        public Language Language { get; set; }
+        public virtual Language Language { get; set; }
 
         /* A book must have an author */
         public int? AuthorId { get; set; }
-        public Author? Author { get; set; }
+
+        public virtual Author? Author { get; set; }
     }
 }
