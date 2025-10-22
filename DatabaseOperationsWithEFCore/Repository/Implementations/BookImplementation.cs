@@ -5,6 +5,7 @@ using DatabaseOperationsWithEFCore.DTOs.BookDTOs.DeleteBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.BookDTOs.UpdateBookDTOs;
 using DatabaseOperationsWithEFCore.DTOs.ResponseDTOs;
 using DatabaseOperationsWithEFCore.Mapper.Book;
+using DatabaseOperationsWithEFCore.Mapper.Language;
 using DatabaseOperationsWithEFCore.Models;
 using DatabaseOperationsWithEFCore.Repository.Services;
 using DatabaseOperationsWithEFCore.Utilities;
@@ -396,6 +397,35 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
                 return Utility.GetResponse(responseData: bookDto, isSuccess: true, message: "Book Retrieved Successfully!");
             }
         }
+
+        public async Task<ResponseDto> GetFirstBookByExplicitLoadingUsingReferenceAsync()
+        {
+            var book = await this._applicationDbContext.Books.FirstAsync();
+
+            /* Explicit Loading using Reference [It is used to one to one mapping] */
+            await _applicationDbContext.Entry(book).Reference(book => book.Language).LoadAsync();
+
+            await _applicationDbContext.Entry(book).Reference(book => book.Author).LoadAsync();
+
+            var bookDto = book.FromBookModelToBookDtoExtension();
+
+            return Utility.GetResponse(responseData: bookDto, isSuccess: true, message: "Book retrieved successfully with explicit loading");
+        }
+
+        //public async Task<ResponseDto> GetAllLanguagesByExplicitLoadingUsingCollectionAsync()
+        //{
+        //    var languages = await this._applicationDbContext.Languages.ToListAsync();
+
+        //    foreach (var language in languages)
+        //    {
+        //    /* Explicit Loading using Collection [It is used to one to one mapping] */
+        //        await this._applicationDbContext.Entry(language).Collection(language => language.Books).Query().Where(book => book.Author.Name == "Krishna").LoadAsync();
+        //    }
+
+        //    var languagesDto = languages.Select(language => language.FromLanguageModelToLanguageDtoExtension()).ToList();
+
+        //    return Utility.GetResponse(responseData: languagesDto, isSuccess: true, message: "Languages retrieved successfully with explicit loading");
+        //}
 
         public async Task<ResponseDto> UpdateBookByTitleAsync(string title, UpdateBookDto updateBookDto)
         {

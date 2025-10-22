@@ -48,6 +48,31 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
+        [HttpGet("first-book-by-explicit-loading-using-reference")]
+        public async Task<IActionResult> GetFirstBookByExplicitLoadingUsingReferenceAsync()
+        {
+            var response = await bookService.GetFirstBookByExplicitLoadingUsingReferenceAsync();
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        //[HttpGet("books/all-languages-by-explicit-loading-using-collection")]
+        //public async Task<IActionResult> GetAllLanguagesByExplicitLoadingUsingCollectionAsync()
+        //{
+        //    var response = await bookService.GetAllLanguagesByExplicitLoadingUsingCollectionAsync();
+
+        //    if (response.IsSuccess)
+        //    {
+        //        return Ok(response);
+        //    }
+
+        //    return BadRequest(response);
+        //}
+
         [HttpPost("add-book")]
         public async Task<IActionResult> AddBookAsync([FromBody] AddBookDto addBookDto)
         {

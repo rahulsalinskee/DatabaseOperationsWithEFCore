@@ -14,6 +14,10 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 
         public Task<ResponseDto> GetBookByTitleAsync(string title);
 
+        public Task<ResponseDto> GetFirstBookByExplicitLoadingUsingReferenceAsync();
+
+        //public Task<ResponseDto> GetAllLanguagesByExplicitLoadingUsingCollectionAsync();
+
         public Task<ResponseDto> AddBookAsync(AddBookDto addBookDto);
 
         public Task<ResponseDto> AddBooksAsync(AddBooksDto addNewBooksDto);

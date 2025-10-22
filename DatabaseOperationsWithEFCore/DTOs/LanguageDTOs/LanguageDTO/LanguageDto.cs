@@ -9,6 +9,6 @@ namespace DatabaseOperationsWithEFCore.DTOs.LanguageDTOs.LanguageDTO
 
         public string Description { get; set; }
 
-        public ICollection<BookDto> BookDto { get; set; }
+        public ICollection<BookDto> BooksDto { get; set; }
     }
 }
