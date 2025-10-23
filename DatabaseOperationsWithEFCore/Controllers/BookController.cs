@@ -24,6 +24,30 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
+        [HttpGet("get-all-books-using-sql-query/")]
+        public async Task<IActionResult> GetAllBooksUsingSqlQueryAsync()
+        {
+            var response = await bookService.GetAllBooksUsingSqlQueryAsync();
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
+        [HttpGet("get-all-books-using-sql-stored-procedure-without-parameter/")]
+        public async Task<IActionResult> GetAllBooksUsingSqlStoredProcedureWithoutParameterAsync()
+        {
+            var response = await bookService.GetAllBooksUsingSqlStoredProcedureWithoutParameterAsync();
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
         [HttpGet("get-all-books-by-eager-loading-books/")]
         public async Task<IActionResult> GetAllBooksByEagerLoadingAsync([FromQuery] string? filterOnColumn = null, [FromQuery] string? filterKeyWord = null)
         {

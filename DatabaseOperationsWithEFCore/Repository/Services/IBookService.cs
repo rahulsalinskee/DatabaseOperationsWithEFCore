@@ -20,6 +20,10 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 
         public Task<ResponseDto> GetLastBookByLazyLoadingAsync();
 
+        public Task<ResponseDto> GetAllBooksUsingSqlQueryAsync();
+
+        public Task<ResponseDto> GetAllBooksUsingSqlStoredProcedureWithoutParameterAsync();
+
         public Task<ResponseDto> AddBookAsync(AddBookDto addBookDto);
 
         public Task<ResponseDto> AddBooksAsync(AddBooksDto addNewBooksDto);
