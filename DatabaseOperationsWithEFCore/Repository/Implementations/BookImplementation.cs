@@ -405,6 +405,35 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
         }
 
+        public async Task<ResponseDto> GetAllBooksByAuthorIdUsingSqlStoredProcedureWithParameterAsync(int authorId)
+        {
+            string storedProcedureName = "sp_GET_BOOK_BY_AUTHOR_ID";
+
+            if (authorId < 1 || authorId > 2)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Invalid author ID provided.");
+            }
+
+            var books = await this._applicationDbContext.Books.FromSql($"EXECUTE {storedProcedureName} {authorId}").ToListAsync();
+
+            if (books is null)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Books is null");
+            }
+            else
+            {
+                if (!books.Any())
+                {
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "No books found");
+                }
+                else
+                {
+                    var booksDto = books.Select(book => new { ResponseData = book.FromBookModelToBookDtoExtension() }).ToList();
+                    return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books retrieved successfully");
+                }
+            }
+        }
+
         public async Task<ResponseDto> GetAllBooksByEagerLoadingAsync(string? filterOnColumn, string? filterKeyWord)
         {
             var books = await this._applicationDbContext.Books.AsNoTracking().Include(book => book.Author).ToListAsync();

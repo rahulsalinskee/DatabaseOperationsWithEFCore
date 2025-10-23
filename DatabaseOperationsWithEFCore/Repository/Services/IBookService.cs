@@ -24,6 +24,8 @@ namespace DatabaseOperationsWithEFCore.Repository.Services
 
         public Task<ResponseDto> GetAllBooksUsingSqlStoredProcedureWithoutParameterAsync();
 
+        public Task<ResponseDto> GetAllBooksByAuthorIdUsingSqlStoredProcedureWithParameterAsync(int authorId);
+
         public Task<ResponseDto> AddBookAsync(AddBookDto addBookDto);
 
         public Task<ResponseDto> AddBooksAsync(AddBooksDto addNewBooksDto);
