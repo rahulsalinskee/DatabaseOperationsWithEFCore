@@ -9,6 +9,7 @@ using DatabaseOperationsWithEFCore.Mapper.Language;
 using DatabaseOperationsWithEFCore.Models;
 using DatabaseOperationsWithEFCore.Repository.Services;
 using DatabaseOperationsWithEFCore.Utilities;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseOperationsWithEFCore.Repository.Implementations
@@ -415,6 +416,37 @@ namespace DatabaseOperationsWithEFCore.Repository.Implementations
             }
 
             var books = await this._applicationDbContext.Books.FromSql($"EXECUTE {storedProcedureName} {authorId}").ToListAsync();
+
+            if (books is null)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Books is null");
+            }
+            else
+            {
+                if (!books.Any())
+                {
+                    return Utility.GetResponse(responseData: null, isSuccess: false, message: "No books found");
+                }
+                else
+                {
+                    var booksDto = books.Select(book => new { ResponseData = book.FromBookModelToBookDtoExtension() }).ToList();
+                    return Utility.GetResponse(responseData: booksDto, isSuccess: true, message: "Books retrieved successfully");
+                }
+            }
+        }
+
+        public async Task<ResponseDto> GetAllBooksByAuthorIdUsingSqlStoredProcedureWithParameterByUsingSqlParameterClassAsync(int authorId)
+        {
+            string storedProcedureName = "sp_GET_BOOK_BY_AUTHOR_ID";
+
+            if (authorId < 1 || authorId > 2)
+            {
+                return Utility.GetResponse(responseData: null, isSuccess: false, message: "Invalid author ID provided.");
+            }
+
+            var authorIdParameter = new SqlParameter("@AuthorId", authorId);
+
+            var books = await this._applicationDbContext.Books.FromSql($"EXECUTE {storedProcedureName} {authorIdParameter}").ToListAsync();
 
             if (books is null)
             {

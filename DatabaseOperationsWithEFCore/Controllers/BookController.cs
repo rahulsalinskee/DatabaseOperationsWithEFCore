@@ -60,6 +60,18 @@ namespace DatabaseOperationsWithEFCore.Controllers
             return NotFound(response);
         }
 
+        [HttpGet("get-all-books-by-author-id-using-sql-stored-procedure-with-parameter-by-using-sql-parameter-class/{authorId:int}")]
+        public async Task<IActionResult> GetAllBooksByAuthorIdUsingSqlStoredProcedureWithParameterByUsingSqlParameterClassAsync(int authorId)
+        {
+            var response = await bookService.GetAllBooksByAuthorIdUsingSqlStoredProcedureWithParameterByUsingSqlParameterClassAsync(authorId: authorId);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            return NotFound(response);
+        }
+
         [HttpGet("get-all-books-by-eager-loading-books/")]
         public async Task<IActionResult> GetAllBooksByEagerLoadingAsync([FromQuery] string? filterOnColumn = null, [FromQuery] string? filterKeyWord = null)
         {
